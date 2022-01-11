@@ -1,6 +1,6 @@
 from flask import Blueprint, request
 from general.http import BadRequestResponse
-from .shorteners import get_bitly_url, get_tinyurl_url
+from .shortening_service import ShorteningService
 
 api = Blueprint('api', __name__)
 
@@ -16,4 +16,15 @@ def create_shortlink():
     if not provider == "bitly" and not provider == "tinyurl" or not isinstance(provider, str):
         return BadRequestResponse("provider must be 'bitly' or 'tinyurl'")
     
-    return get_bitly_url(url) if provider == "bitly" else get_tinyurl_url(url)
+    shortening_service: ShorteningService = ShorteningService(url)
+    
+    if provider == "bitly":
+        try:
+            return shortening_service.attempt_to_get_bitly()
+        except:
+            return shortening_service.attempt_to_get_tinyurl()
+    else:
+        try:
+            return shortening_service.attempt_to_get_tinyurl()
+        except:
+            return shortening_service.attempt_to_get_bitly()
